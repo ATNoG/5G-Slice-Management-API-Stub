@@ -1,6 +1,6 @@
 # Authentication
 
-All Slice Manger's endpoints are protected (basic auth). Therefore, the request should be made with this in mind. See the example below.
+All Slice Manager's endpoints are protected (basic auth). Therefore, the request should be made with this in mind. See the example below.
 
 ```python
 # Make a GET request with Basic Auth
@@ -65,9 +65,10 @@ response = requests.get(url, auth=HTTPBasicAuth(username, password))
 | **Status Code** | **Response Payload** |
 |------------------|----------------------|
 | **HTTP 476** | ```{ "description": "The maximum number of slices created was reached.", "data": "Slice number reached the limit." } ``` |
-| **HTTP 475** | ```{ "data": "data", "description": "<list_of_failed_commands>" } ``` | 
-| **HTTP 405** | ```{ "errors": "<error_message>", "description": "<exception_string>" } ``` | 
-| **HTTP 400** | ```{ "errors": "<exception_string>", "description": "Bad request" } ``` |
+| **HTTP 475** | ```{ "description": "<failed_commands>", "data": "<body_payload>" } ``` |
+| **HTTP 475** | ```{ "description": "<failed_commands> commands failed during Product order creation", "data": "<similar_to_201_response_payload>" } ``` | 
+| **HTTP 405** | ```{ "description": "<operation_not_allowed_exception_string>", "errors": "<error_message_for_why_the_operation_was_not_allowed (e.g. 'Slice ID reserved.', 'This DNN cannot be used outside of standard slice.', 'This sst and sd combination cannot be used outside of standard slice.', 'Rule name {} is reserved.', 'NetworkSlice ID already exists.', 'NetworkSlice ID created by serviceOrder, ProductOrder has no permissions.')>" } ``` | 
+| **HTTP 400** | ```{ "description": "Bad request", "errors": "<exception_string>" } ``` |
 
 
 -----
@@ -75,7 +76,7 @@ response = requests.get(url, auth=HTTPBasicAuth(username, password))
 ### 1.2 - Get Network Slices (CSMF Get Products)
 
 
-`GET http://{{slice_manager_url}}/productOrder/get`
+`GET http://{{slice_manager_url}}/productOrder/get` [`?fields=f1,f2,f3&offset=2&limit=3`] (no query parameters used for example)
 
 **Payload:**
 
@@ -89,16 +90,21 @@ response = requests.get(url, auth=HTTPBasicAuth(username, password))
 |------------------|----------------------|
 | **HTTP 200** | ```{"description":"Success","data":[{"id":"huawei.com","name":"huawei.com","DNN":"huawei.com","administrative_state":"UNLOCKED","operational_state":"ENABLED","plmnid":"1","sst":"1","sd":"010101","coverage_area":{"IT":"RAN in IT two cells","PDA":"RAN Porto de Aveiro"},"n6protections":[{"type":"filter","name":"rule_any"}],"kpis":[]},{"id":"5gasp.eu","name":"5gasp.eu","DNN":"5gasp.eu","administrative_state":"UNLOCKED","operational_state":"ENABLED","plmnid":"1","sst":"1","sd":"030303","coverage_area":{"IT":"RAN in IT two cells","PDA":"RAN Porto de Aveiro"},"n6protections":[{"type":"filter","name":"rule_any"}],"kpis":[]},{"id":"test","name":"test","DNN":"test","administrative_state":"UNLOCKED","operational_state":"ENABLED","sst":"1","sd":"222222","dllatency":"5","ullatency":"5","dlguathptperue":"30000.0","ulguathptperue":"30000.0","dlmaxthptperue":"30000.0","ulmaxthptperue":"30000.0","delaytolerance":"NOT_SUPPORTED","reliability":"99.0","dldeterministiccomm":"NOT_SUPPORTED","uldeterministiccomm":"NOT_SUPPORTED","coverage_area":{"IT":"RAN in IT two cells"},"n6protections":[{"type":"PCC Rule","name":"rule_any"}],"kpis":[]}]}``` |
 
+- Headers: `{ X-Result-Count": "3", "X-Total-Count": "3" }`
+
 **[Errors]**
 
-*TBD*
+| **Status Code** | **Response Payload** |
+|------------------|----------------------|
+| **HTTP 404** | ```{ "description": "Not Found" } ``` | 
+| **HTTP 400** | ```{ "description": "Bad request", "errors": "<exception_string>" } ``` |
 
 -----
 
 ### 1.3 - Get Network Slice By ID (CSMF Get Product by ID)
 
 
-`GET http://{{slice_manager_url}}/productOrder/{id}/get`
+`GET http://{{slice_manager_url}}/productOrder/{{id}}/get` [`?fields=f1,f2,f3`] (no query parameters used for example)
 
 In the examples below, id = "test"
 
@@ -116,13 +122,17 @@ In the examples below, id = "test"
 
 **[Errors]**
 
-*TBD*
+| **Status Code** | **Response Payload** |
+|------------------|----------------------|
+| **HTTP 404** | ```{ "description": "Not Found" } ``` | 
+| **HTTP 400** | ```{ "description": "Bad request", "errors": "<exception_string>" } ``` |
+
 
 -----
 
 ### 1.4 - Patch Network Slice (CSMF Patch Product)
 
-`PATCH http://{{slice_manager_url}}/productOrder/{id}/patch`
+`PATCH http://{{slice_manager_url}}/productOrder/{{id}}/patch`
 
 In the examples below, id = "test". 
 The examples consider the patching of the `test` network slice created in request 1.1.
@@ -164,13 +174,19 @@ The examples consider the patching of the `test` network slice created in reques
 
 **[Errors]**
 
-*TBD*
+| **Status Code** | **Response Payload** |
+|------------------|----------------------|
+| **HTTP 475** | ```{ "description": "<failed_commands>", "data": "<body_payload_including_id>" } ``` |
+| **HTTP 475** | ```{ "description": "<failed_commands> commands failed during ProductOrder update" } ``` |
+| **HTTP 405** | ```{ "description": "<operation_not_allowed_exception_string>", "errors": "<error_message_for_why_the_operation_was_not_allowed (e.g. 'Standard slice cannot be updated.', 'This DNN cannot be used outside of standard slice.', 'This sst and sd combination cannot be used outside of standard slice.', 'Rule name {} is reserved.')>" } ``` | 
+| **HTTP 404** | ```{ "description": "Not Found", "errors": "NetworkSlice ID does not exists in ProductOrders" } ``` | 
+| **HTTP 400** | ```{ "description": "Bad request", "errors": "<exception_string>" } ``` |
 
 -----
 
 ### 1.5 - Network Slice Ips Pool 
 
-`GET http://{slice_manager_url}/OrderIPs/{id}/get`
+`GET http://{{slice_manager_url}}/OrderIPs/{{id}}/get`
 
 In the examples below, id = "test". 
 
@@ -188,15 +204,18 @@ In the examples below, id = "test".
 
 **[Errors]**
 
-*TBD*
+| **Status Code** | **Response Payload** |
+|------------------|----------------------|
+| **HTTP 404** | ```{ "description": "Not Found" } ``` | 
+| **HTTP 400** | ```{ "description": "Bad request", "errors": "<exception_string>" } ``` |
 
 -----
 
-### 1.6 - Delete all Network Slice UE 
+### 1.6 - Delete all Network Slice UEs 
 
-`DELETE http://{slice_manager_url}/UE/{{id}}/delete_slice`
+`DELETE http://{{slice_manager_url}}/UE/{{slice}}/delete_slice`
 
-In the examples below, id = "test"
+In the examples below, slice = "test"
 
 **Payload:**
 
@@ -206,19 +225,24 @@ In the examples below, id = "test"
 
 **[Success]**
 
-| **Status Code** | **Response Payload** |
-|------------------|----------------------|
-| **HTTP 204** | - |
+| **Status Code** | **Response Payload** | **Headers** |
+|------------------|----------------------|----------------------|
+| **HTTP 204** | - | ``` {"description":"Deleted"} ``` |
 
 **[Errors]**
 
-*TBD*
+| **Status Code** | **Response Payload**                                                            |
+|------------------|---------------------------------------------------------------------------------|
+| **HTTP 475** | ```{ "description": "<failed_commands> commands failed when deleting UEs" } ``` |
+| **HTTP 404** | ```{ "description": "Not Found" }```                                            |
+| **HTTP 400** | ```{ "description": "Bad request", "errors": "<exception_string>" } ```         |
+
 
 ---
 
 ### 1.7 - Delete Network Slice 
 
-`DELETE http://{slice_manager_url}/productOrder/{{id}}/delete`
+`DELETE http://{{slice_manager_url}}/productOrder/{{id}}/delete`
 
 In the examples below, id = "test"
 
@@ -230,20 +254,25 @@ In the examples below, id = "test"
 
 **[Success]**
 
-| **Status Code** | **Response Payload** |
-|------------------|----------------------|
-| **HTTP 204** | - |
+| **Status Code** | **Response Payload** | **Headers** |
+|------------------|----------------------|----------------------|
+| **HTTP 204** | - | ``` {"description":"Deleted"} ``` |
 
 **[Errors]**
 
-*TBD*
+| **Status Code** | **Response Payload** |
+|------------------|----------------------|
+| **HTTP 475** | ```{ "description": "<failed_commands> commands failed during Product order deletion" } ``` |
+| **HTTP 405** | ```{ "description": "<operation_not_allowed_exception_string>", "errors": "<error_message_for_why_the_operation_was_not_allowed (e.g. 'Standard slice cannot be deleted.')>" } ``` |
+| **HTTP 404** | ```{ "description": "Not Found", "errors": "NetworkSlice does not exists" OR "NetworkSlice only existed in ProductOrder, it is deleted now" } ``` | 
+| **HTTP 400** | ```{ "description": "Bad request", "errors": "<exception_string>" } ``` |
 
 
 ## 2. UE
 
 ### 2.1 - Create UE
 
-`POST http://{slice_manager_url}/UE/post`
+`POST http://{{slice_manager_url}}/UE/post`
 
 
 **Payload:**
@@ -277,13 +306,17 @@ In the examples below, id = "test"
 
 **[Errors]**
 
-*TBD*
+| **Status Code** | **Response Payload**                                                                                                                                                                                                                |
+|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **HTTP 475** | ```{ "description": "<failed_commands> commands failed when creating UEs", "data": "<UE_data_similar_to_201_response_payload>" } ```                                                                                                |
+| **HTTP 405** | ```{ "description": "<operation_not_allowed_exception_string>", "errors": "<error_message_for_why_the_operation_was_not_allowed (e.g. 'UE association already exists.', 'Slice does not exist.', 'IPV4 outside of IPpool.')>" } ``` |
+| **HTTP 400** | ```{ "description": "Bad request", "errors": "<exception_string>" } ```                                                                                                                                                             |
 
 ---
 
 ### 2.2 - Get UE by Slice
 
-`GET http://{slice_manager_url}/UE/{slice}/get_slice`
+`GET http://{{slice_manager_url}}/UE/{{slice}}/get_slice`
 
 In the examples below, slice = "test". 
 
@@ -302,13 +335,16 @@ In the examples below, slice = "test".
 
 **[Errors]**
 
-*TBD*
+| **Status Code** | **Response Payload** |
+|------------------|----------------------|
+| **HTTP 404** | ```{ "description": "Not Found" } ``` | 
+| **HTTP 400** | ```{ "description": "Bad request", "errors": "<exception_string>" } ``` |
 
 ---
 
 ### 2.3 - Get UE by IMSI
 
-`GET http://{slice_manager_url}/UE/{IMSI}/get_IMSI`
+`GET http://{{slice_manager_url}}/UE/{{IMSI}}/get_IMSI`
 
 In the examples below, IMSI = 999080100001125. 
 
@@ -327,13 +363,16 @@ In the examples below, IMSI = 999080100001125.
 
 **[Errors]**
 
-*TBD*
+| **Status Code** | **Response Payload** |
+|------------------|----------------------|
+| **HTTP 404** | ```{ "description": "Not Found" } ``` | 
+| **HTTP 400** | ```{ "description": "Bad request", "errors": "<exception_string>" } ``` |
 
 ---
 
 ### 2.4 - Get UE by ID
 
-`GET http://{slice_manager_url}/UE/{id}/get`
+`GET http://{{slice_manager_url}}/UE/{{id}}/get`
 
 In the examples below, id = 20. 
 
@@ -352,13 +391,16 @@ In the examples below, id = 20.
 
 **[Errors]**
 
-*TBD*
+| **Status Code** | **Response Payload** |
+|------------------|----------------------|
+| **HTTP 404** | ```{ "description": "Not Found" } ``` | 
+| **HTTP 400** | ```{ "description": "Bad request", "errors": "<exception_string>" } ``` |
 
 ---
 
 ### 2.5 - Get All UE
 
-`GET http://{slice_manager_url}/UE/get`
+`GET http://{{slice_manager_url}}/UE/get`
 
 
 **Payload:**
@@ -373,15 +415,20 @@ In the examples below, id = 20.
 |------------------|----------------------|
 | **HTTP 200** | ```{"description":"Success","data":[{"id":5,"IMSI":999080100001122,"slice":"huawei.com","operational_state":"DISABLED","AMDATA":false,"SNSSAI":"1-010101","DNN":"huawei.com","DEFAULT":"TRUE","UEcanSendSNSSAI":"FALSE","IMSIGroupNAME":"huawei.com999080100001122","numIMSIs":1},{"id":19,"IMSI":999080100001140,"slice":"huawei.com","operational_state":"DISABLED","AMDATA":true,"SNSSAI":"1-010101","DNN":"huawei.com","DEFAULT":"TRUE","UEcanSendSNSSAI":"FALSE","IMSIGroupNAME":"huawei.com999080100001140","numIMSIs":1},{"id":20,"IMSI":999080100001125,"slice":"test","operational_state":"ENABLED","AMDATA":true,"SNSSAI":"1-222222","DNN":"test","DEFAULT":"TRUE","UEcanSendSNSSAI":"FALSE","IMSIGroupNAME":"test999080100001125","numIMSIs":1}]}``` |
 
+- Headers: `{ X-Result-Count": "3", "X-Total-Count": "3" }`
+
 **[Errors]**
 
-*TBD*
+| **Status Code** | **Response Payload** |
+|------------------|----------------------|
+| **HTTP 404** | ```{ "description": "Not Found" } ``` | 
+| **HTTP 400** | ```{ "description": "Bad request", "errors": "<exception_string>" } ``` |
 
 ---
 
 ### 2.6 - Delete UE By IMSI
 
-`DELETE http://{slice_manager_url}/UE/{{IMSI}}/delete_IMSI`
+`DELETE http://{{slice_manager_url}}/UE/{{IMSI}}/delete_IMSI`
 
 In the examples below, IMSI = 999080100001125. 
 
@@ -394,11 +441,15 @@ In the examples below, IMSI = 999080100001125.
 
 **[Success]**
 
-| **Status Code** | **Response Payload** |
-|------------------|----------------------|
-| **HTTP 204** | - |
+| **Status Code** | **Response Payload** | **Headers** |
+|------------------|----------------------|----------------------|
+| **HTTP 204** | - | ``` {"description":"Deleted"} ``` |
 
 **[Errors]**
 
-*TBD*
+| **Status Code** | **Response Payload** |
+|------------------|----------------------|
+| **HTTP 475** | ```{ "description": "<failed_commands> commands failed when deleting UEs" }``` (headers: ``` {"description":"Deleted"} ```) |
+| **HTTP 404** | ```{ "description": "Not Found" } ``` | 
+| **HTTP 400** | ```{ "description": "Bad request", "errors": "<exception_string>" } ``` |
 
