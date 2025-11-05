@@ -1,8 +1,8 @@
 #!/bin/bash
 # @Author: Test Suite
 # @Date:   2025-11-05
-# Test script for DELETE /UE/{slice}/delete_slice endpoint
-# Tests all response codes: 204 (success), 475, 404, 400, 401
+# Test script for POST /UE/post endpoint
+# Tests all response codes: 201 (success), 401, 475, 405, 400
 
 BASE_URL="127.0.0.1:8000"
 AUTH_HEADER="Authorization: Basic YWRtaW46cGFzc3dvcmQ="
@@ -14,7 +14,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 echo "=================================================="
-echo "Testing DELETE /UE/{slice}/delete_slice - Delete UEs by Slice"
+echo "Testing POST /UE/post - Create UE"
 echo "=================================================="
 echo ""
 
@@ -22,12 +22,12 @@ echo ""
 echo -e "${YELLOW}Setting up test data...${NC}"
 curl -s --request POST "http://${BASE_URL}/clear/all" --header "${AUTH_HEADER}" > /dev/null
 
-# Create test slice
+# Create test slices
 curl -s --request POST "http://${BASE_URL}/productOrder/post" \
 --header 'Content-Type: application/json' \
 --header "${AUTH_HEADER}" \
 --data '{
-    "id": "test_ue_deletion", 
+    "id": "test", 
     "name": "test",
     "administrative_state": "UNLOCKED", 
     "operational_state": "ENABLED", 
@@ -49,40 +49,6 @@ curl -s --request POST "http://${BASE_URL}/productOrder/post" \
     "n6protection":[{"type":"PCC Rule","name":"rule_any"}] 
 }' > /dev/null
 
-# Create UEs on the slice
-curl -s --request POST "http://${BASE_URL}/UE/post" \
---header 'Content-Type: application/json' \
---header "${AUTH_HEADER}" \
---data '{
-    "IMSI": 999080100001125,
-    "numIMSIs": 1,
-    "slice": "test_ue_deletion",
-    "IPV4": "",
-    "IPV6": "",
-    "AMDATA": true,
-    "DEFAULT": "TRUE",
-    "UEcanSendSNSSAI": "FALSE",
-    "AMBRUP": 4000000,
-    "AMBRDW": 4000000
-}' > /dev/null
-
-curl -s --request POST "http://${BASE_URL}/UE/post" \
---header 'Content-Type: application/json' \
---header "${AUTH_HEADER}" \
---data '{
-    "IMSI": 999080100001126,
-    "numIMSIs": 1,
-    "slice": "test_ue_deletion",
-    "IPV4": "",
-    "IPV6": "",
-    "AMDATA": true,
-    "DEFAULT": "TRUE",
-    "UEcanSendSNSSAI": "FALSE",
-    "AMBRUP": 4000000,
-    "AMBRDW": 4000000
-}' > /dev/null
-
-# Create another test slice for command failure
 curl -s --request POST "http://${BASE_URL}/productOrder/post" \
 --header 'Content-Type: application/json' \
 --header "${AUTH_HEADER}" \
@@ -108,7 +74,53 @@ curl -s --request POST "http://${BASE_URL}/productOrder/post" \
     "dlmaxthptperue": 50000,
     "n6protection":[{"type":"PCC Rule","name":"rule_any"}] 
 }' > /dev/null
+echo ""
 
+# Test 1: HTTP 201 - Success
+echo -e "${GREEN}Test 1: HTTP 201 - Successful UE creation${NC}"
+echo "-------------------------------------------"
+curl -s --request POST "http://${BASE_URL}/UE/post" \
+--header 'Content-Type: application/json' \
+--header "${AUTH_HEADER}" \
+--data '{
+    "IMSI": 999080100001125,
+    "numIMSIs": 1,
+    "slice": "test",
+    "IPV4": "",
+    "IPV6": "",
+    "AMDATA": true,
+    "DEFAULT": "TRUE",
+    "UEcanSendSNSSAI": "FALSE",
+    "AMBRUP": 4000000,
+    "AMBRDW": 4000000
+}' | jq .
+echo ""
+echo ""
+
+# Test 2: HTTP 401 - Invalid credentials
+echo -e "${RED}Test 2: HTTP 401 - Invalid authentication credentials${NC}"
+echo "-------------------------------------------"
+curl -s --request POST "http://${BASE_URL}/UE/post" \
+--header 'Content-Type: application/json' \
+--header "${INVALID_AUTH_HEADER}" \
+--data '{
+    "IMSI": 999080100001126,
+    "numIMSIs": 1,
+    "slice": "test",
+    "IPV4": "",
+    "IPV6": "",
+    "AMDATA": true,
+    "DEFAULT": "TRUE",
+    "UEcanSendSNSSAI": "FALSE",
+    "AMBRUP": 4000000,
+    "AMBRDW": 4000000
+}' | jq .
+echo ""
+echo ""
+
+# Test 3: HTTP 475 - Command failure
+echo -e "${YELLOW}Test 3: HTTP 475 - Command failure during UE creation${NC}"
+echo "-------------------------------------------"
 curl -s --request POST "http://${BASE_URL}/UE/post" \
 --header 'Content-Type: application/json' \
 --header "${AUTH_HEADER}" \
@@ -123,80 +135,20 @@ curl -s --request POST "http://${BASE_URL}/UE/post" \
     "UEcanSendSNSSAI": "FALSE",
     "AMBRUP": 4000000,
     "AMBRDW": 4000000
-}' > /dev/null
+}' | jq .
+echo ""
 echo ""
 
-# Test 1: HTTP 204 - Success
-echo -e "${GREEN}Test 1: HTTP 204 - Successful UE deletion${NC}"
+# Test 4: HTTP 405 - Slice does not exist
+echo -e "${YELLOW}Test 4: HTTP 405 - Slice does not exist${NC}"
 echo "-------------------------------------------"
-echo "Response:"
-curl -i -s --request DELETE "http://${BASE_URL}/UE/test_ue_deletion/delete_slice" \
---header "${AUTH_HEADER}" | grep -E "HTTP|description"
-echo ""
-echo ""
-
-# Test 2: HTTP 475 - Command failure
-echo -e "${YELLOW}Test 2: HTTP 475 - Command failure during UE deletion${NC}"
-echo "-------------------------------------------"
-curl -s --request DELETE "http://${BASE_URL}/UE/fail_475_0/delete_slice" \
---header "${AUTH_HEADER}" | jq .
-echo ""
-echo ""
-
-# Test 3: HTTP 404 - Slice not found
-echo -e "${YELLOW}Test 3: HTTP 404 - NetworkSlice does not exist${NC}"
-echo "-------------------------------------------"
-curl -s --request DELETE "http://${BASE_URL}/UE/nonexistent/delete_slice" \
---header "${AUTH_HEADER}" | jq .
-echo ""
-echo ""
-
-# Test 4: HTTP 400 - Bad request
-echo -e "${RED}Test 4: HTTP 400 - Bad request${NC}"
-echo "-------------------------------------------"
-
-curl -s --request DELETE "http://${BASE_URL}/UE/fail_400_0/delete_slice" \
---header "${AUTH_HEADER}" | jq .
-echo ""
-echo ""
-
-# Test 5: HTTP 401 - Invalid credentials
-echo -e "${RED}Test 5: HTTP 401 - Invalid authentication credentials${NC}"
-echo "-------------------------------------------"
-# Create another slice for auth test
-curl -s --request POST "http://${BASE_URL}/productOrder/post" \
---header 'Content-Type: application/json' \
---header "${AUTH_HEADER}" \
---data '{
-    "id": "test_auth_ue", 
-    "name": "test",
-    "administrative_state": "UNLOCKED", 
-    "operational_state": "ENABLED", 
-    "coverage_area": ["IT"], 
-    "sst": 1, 
-    "sd": "222225", 
-    "dnn": "auth.eu", 
-    "prioritylabel": 100,
-    "reliability": 99.9, 
-    "dllatency": 20, 
-    "ullatency": 20,
-    "delaytolerance": "NOT_SUPPORTED", 
-    "dldeterministiccomm": "NOT_SUPPORTED", 
-    "uldeterministiccomm": "NOT_SUPPORTED",
-    "ulguathptperue": 20000,
-    "ulmaxthptperue": 50000,
-    "dlguathptperue": 20000,
-    "dlmaxthptperue": 50000,
-    "n6protection":[{"type":"PCC Rule","name":"rule_any"}] 
-}' > /dev/null
-
 curl -s --request POST "http://${BASE_URL}/UE/post" \
 --header 'Content-Type: application/json' \
 --header "${AUTH_HEADER}" \
 --data '{
     "IMSI": 999080100001128,
     "numIMSIs": 1,
-    "slice": "test_auth_ue",
+    "slice": "nonexistent",
     "IPV4": "",
     "IPV6": "",
     "AMDATA": true,
@@ -204,10 +156,49 @@ curl -s --request POST "http://${BASE_URL}/UE/post" \
     "UEcanSendSNSSAI": "FALSE",
     "AMBRUP": 4000000,
     "AMBRDW": 4000000
-}' > /dev/null
+}' | jq .
+echo ""
+echo ""
 
-curl -s --request DELETE "http://${BASE_URL}/UE/test_auth_ue/delete_slice" \
---header "${INVALID_AUTH_HEADER}" | jq .
+# Test 5: HTTP 405 - IMSI already exists (duplicate)
+echo -e "${YELLOW}Test 5: HTTP 405 - UE association already exists (duplicate IMSI)${NC}"
+echo "-------------------------------------------"
+curl -s --request POST "http://${BASE_URL}/UE/post" \
+--header 'Content-Type: application/json' \
+--header "${AUTH_HEADER}" \
+--data '{
+    "IMSI": 999080100001125,
+    "numIMSIs": 1,
+    "slice": "test",
+    "IPV4": "",
+    "IPV6": "",
+    "AMDATA": true,
+    "DEFAULT": "TRUE",
+    "UEcanSendSNSSAI": "FALSE",
+    "AMBRUP": 4000000,
+    "AMBRDW": 4000000
+}' | jq .
+echo ""
+echo ""
+
+# Test 6: HTTP 400 - Bad request
+echo -e "${RED}Test 6: HTTP 400 - Bad request (invalid IMSI)${NC}"
+echo "-------------------------------------------"
+curl -s --request POST "http://${BASE_URL}/UE/post" \
+--header 'Content-Type: application/json' \
+--header "${AUTH_HEADER}" \
+--data '{
+    "IMSI": -1,
+    "numIMSIs": 1,
+    "slice": "test",
+    "IPV4": "",
+    "IPV6": "",
+    "AMDATA": true,
+    "DEFAULT": "TRUE",
+    "UEcanSendSNSSAI": "FALSE",
+    "AMBRUP": 4000000,
+    "AMBRDW": 4000000
+}' | jq .
 echo ""
 echo ""
 

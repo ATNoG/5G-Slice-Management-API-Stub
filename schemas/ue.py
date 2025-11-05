@@ -4,7 +4,7 @@
 # @Last Modified by:   Rafael Direito
 # @Last Modified time: 2025-06-21 11:26:52
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Optional
 import schemas.enums as enums
 
 class UE(BaseModel):
@@ -23,16 +23,17 @@ class UE(BaseModel):
 class UEBase(BaseModel):
     operational_state: Optional[enums.OperationalState]=enums.OperationalState.DISABLED
     IMSI: int
-    slice: str
     numIMSIs: Optional[int]=1
+    slice: str
     IPV4: Optional[str]=None
-    IPV4count: Optional[int]=None
     IPV6: Optional[str]=None
     AMDATA: Optional[bool]=True
     DEFAULT: Optional[enums.CustomBoolean]=enums.CustomBoolean.TRUE
     UEcanSendSNSSAI: Optional[enums.CustomBoolean]=enums.CustomBoolean.FALSE
     AMBRUP: Optional[int]=None
     AMBRDW: Optional[int]=None
+
+    IPV4count: Optional[int]=None
     UPUnit: Optional[enums.CNThptUnit]=enums.CNThptUnit.Kbps
     DWUnit: Optional[enums.CNThptUnit]=enums.CNThptUnit.Kbps
     SNSSAI: Optional[str]=None
@@ -52,6 +53,19 @@ class UEschema(UEBase):
     HighLatenCommBuffer: Optional[int]=None
     MICO: Optional[enums.CustomBoolean]=None
     DNNQOSTPLID: Optional[int]=None
+
+class UEResponse(BaseModel):
+    id: int
+    IMSI: int
+    slice: str
+    operational_state: Optional[enums.OperationalState]=enums.OperationalState.DISABLED
+    AMDATA: Optional[bool]=True
+    SNSSAI: Optional[str]=None
+    DNN: Optional[str]=None
+    DEFAULT: Optional[enums.CustomBoolean]=enums.CustomBoolean.TRUE
+    UEcanSendSNSSAI: Optional[enums.CustomBoolean]=enums.CustomBoolean.FALSE
+    IMSIGroupNAME: Optional[str]=None
+    numIMSIs: Optional[int]=1
 
 
 class CNSlice(UEschema):
