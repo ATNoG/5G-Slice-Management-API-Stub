@@ -1,5 +1,5 @@
 #!/bin/bash
-# @Author: Test Suite
+# @Author: Miguel Figueiredo (Test Suite generated with AI)
 # @Date:   2025-11-05
 # Test script for GET /productOrder/get endpoint
 # Tests all response codes: 200 (success), 404, 400, 401

@@ -1,5 +1,5 @@
 #!/bin/bash
-# @Author: Test Suite
+# @Author: Miguel Figueiredo (Test Suite generated with AI)
 # @Date:   2025-11-05
 # Test script for POST /productOrder/post endpoint
 # Tests all response codes: 201 (success), 476, 475, 405, 400, 401

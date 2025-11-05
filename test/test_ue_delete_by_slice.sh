@@ -1,5 +1,5 @@
 #!/bin/bash
-# @Author: Test Suite
+# @Author: Miguel Figueiredo (Test Suite generated with AI)
 # @Date:   2025-11-05
 # Test script for DELETE /UE/{slice}/delete_slice endpoint
 # Tests all response codes: 204 (success), 475, 404, 400, 401

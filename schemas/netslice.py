@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Rafael Direito
 # @Date:   2025-06-21 10:02:39
-# @Last Modified by:   Rafael Direito
-# @Last Modified time: 2025-06-21 16:05:28
+# @Last Modified by:   Miguel Figueiredo
+# @Last Modified time: 2025-11-05 16:42:24
 from pydantic import BaseModel
 from typing import List, Optional
 import schemas.enums as enums

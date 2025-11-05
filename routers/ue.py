@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Rafael Direito
 # @Date:   2025-06-21 10:49:45
-# @Last Modified by:   Rafael Direito
-# @Last Modified time: 2025-06-21 16:08:41
+# @Last Modified by:   Miguel Figueiredo
+# @Last Modified time: 2025-11-05 16:43:08
 
 from fastapi import APIRouter, Header, Response, status, Depends
 from fastapi.security import HTTPBasicCredentials

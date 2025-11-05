@@ -2,7 +2,7 @@
 # @Author: Rafael Direito
 # @Date:   2025-06-21 16:08:06
 # @Last Modified by:   Miguel Figueiredo
-# @Last Modified time: 2025-11-02 13:05:51
+# @Last Modified time: 2025-11-05 16:43:19
 
 from fastapi import APIRouter, Header, Response, status, Depends, Query
 from fastapi.security import HTTPBasicCredentials

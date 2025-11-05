@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+# @Author: Miguel Figueiredo
+# @Date:   2025-11-05 16:43:04
+# @Last Modified by:   Miguel Figueiredo
+# @Last Modified time: 2025-11-05 16:43:04
+
 from fastapi import APIRouter, Header, status, Depends
 from fastapi.security import HTTPBasicCredentials
 from fastapi.responses import JSONResponse
